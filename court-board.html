@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>배드민턴클럽 코트 현황판</title>
+  <style>
+    :root {
+      --mint: #d5f1e8;
+      --green: #2d8e7d;
+      --green-dark: #1f6259;
+      --line: #9dd0c5;
+      --pink: #e9aaa8;
+      --ink: #101817;
+      --paper: #fbfffd;
+      --danger: #e13b2f;
+      --level-beginner: #1e63d6;
+      --level-d: #2f8f4e;
+      --level-c: #f2c744;
+      --level-b: #e4772d;
+      --level-a: #cf2f2f;
+      --shadow: 0 22px 60px rgba(18, 33, 30, .24);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: var(--ink);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
+      background:
+        linear-gradient(135deg, rgba(64, 114, 104, .22), transparent 28%),
+        linear-gradient(315deg, rgba(219, 173, 139, .24), transparent 24%),
+        #eef2ee;
+    }
+
+    .app {
+      width: min(1180px, 100%);
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+
+    button {
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(31, 98, 89, .28);
+      border-radius: 8px;
+      color: var(--green-dark);
+      background: rgba(255, 255, 255, .82);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      box-shadow: 0 8px 18px rgba(18, 33, 30, .12);
+    }
+
+    button:hover {
+      background: #fff;
+      border-color: rgba(31, 98, 89, .5);
+    }
+
+    button:disabled {
+      opacity: .42;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .board {
+      position: relative;
+      min-height: 660px;
+      padding: clamp(18px, 3vw, 34px);
+      border: 11px solid #9ab1a9;
+      border-radius: 8px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px) 0 0 / 28px 28px,
+        linear-gradient(0deg, rgba(255,255,255,.42) 1px, transparent 1px) 0 0 / 28px 28px,
+        var(--mint);
+      box-shadow: var(--shadow), inset 0 0 0 3px rgba(255,255,255,.48);
+      overflow: hidden;
+    }
+
+    .board::before,
+    .board::after,
+    .corner {
+      content: "";
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      background:
+        radial-gradient(circle at 35% 35%, #71877f 0 16%, #41524c 17% 46%, #2a342f 47% 58%, transparent 59%);
+      opacity: .92;
+      pointer-events: none;
+    }
+
+    .board::before {
+      top: -8px;
+      left: -8px;
+    }
+
+    .board::after {
+      top: -8px;
+      right: -8px;
+      transform: rotate(90deg);
+    }
+
+    .corner.left {
+      left: -8px;
+      bottom: -8px;
+      transform: rotate(270deg);
+    }
+
+    .corner.right {
+      right: -8px;
+      bottom: -8px;
+      transform: rotate(180deg);
+    }
+
+    .title {
+      margin: 0 0 14px;
+      text-align: center;
+      font-size: clamp(30px, 4.6vw, 54px);
+      line-height: 1;
+      letter-spacing: 0;
+      font-weight: 900;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 240px;
+      gap: 0;
+      border: 2px solid var(--line);
+      background: var(--paper);
+    }
+
+    .main-area {
+      min-width: 0;
+    }
+
+    .section-title {
+      display: grid;
+      min-height: 42px;
+      place-items: center;
+      border-bottom: 2px solid var(--line);
+      background: var(--green);
+      color: #fff;
+      font-size: clamp(16px, 1.9vw, 25px);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .court-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 2px solid var(--line);
+    }
+
+    .court {
+      min-height: 250px;
+      display: grid;
+      grid-template-rows: 38px 1fr;
+      border-right: 2px solid var(--line);
+      background: #fffefa;
+    }
+
+    .court:last-child {
+      border-right: 0;
+    }
+
+    .court-title,
+    .list-title {
+      display: grid;
+      place-items: center;
+      background: var(--pink);
+      border-bottom: 1px solid var(--line);
+      font-size: clamp(17px, 2vw, 27px);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .drop-zone {
+      min-width: 0;
+      min-height: 94px;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px;
+      background: #fffefa;
+      transition: background .16s ease, box-shadow .16s ease;
+    }
+
+    .drop-zone.is-hovered {
+      background: #fff8d8;
+      box-shadow: inset 0 0 0 3px #f3cb55;
+    }
+
+    .court-zone {
+      min-height: 212px;
+    }
+
+    .court-zone,
+    .wait-zone {
+      display: grid;
+      grid-template-columns: repeat(2, 50px);
+      grid-auto-rows: 50px;
+      place-content: start center;
+      align-items: center;
+      justify-items: center;
+      gap: 8px;
+    }
+
+    .absent-panel {
+      display: grid;
+      grid-template-rows: 38px minmax(92px, auto);
+      border-top: 2px solid var(--line);
+      background: #fff;
+    }
+
+    .member-zone {
+      min-height: 510px;
+      background: #fbfffd;
+    }
+
+    .waiting {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(86px, 1fr));
+      border-bottom: 2px solid var(--line);
+      background: #fff;
+      overflow-x: auto;
+    }
+
+    .waiting-title {
+      grid-column: 1 / -1;
+      display: grid;
+      place-items: center;
+      min-height: 38px;
+      background: var(--pink);
+      border-bottom: 1px solid var(--line);
+      color: var(--ink);
+      font-size: clamp(17px, 2vw, 27px);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .wait-list {
+      display: grid;
+      grid-template-rows: 32px minmax(136px, auto);
+      border-right: 2px solid var(--line);
+    }
+
+    .wait-list:last-child {
+      border-right: 0;
+    }
+
+    .wait-zone {
+      min-height: 136px;
+      padding: 10px;
+      background: #fbfffd;
+    }
+
+    .wait-zone.is-hovered {
+      background: #fff8d8;
+    }
+
+    .wait-number-label {
+      display: grid;
+      place-items: center;
+      min-height: 32px;
+      border-bottom: 1px solid rgba(157, 208, 197, .72);
+      background: #fbfffd;
+      color: #0757ee;
+      font-size: clamp(20px, 2.4vw, 34px);
+      font-weight: 900;
+      font-family: "Comic Sans MS", "Malgun Gothic", cursive, sans-serif;
+      line-height: 1;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .wait-list.is-selected .wait-number-label,
+    .wait-list.is-selected .wait-zone {
+      background: #fff8d8;
+      box-shadow: inset 0 0 0 3px #f3cb55;
+    }
+
+    .drop-zone.is-full {
+      box-shadow: inset 0 0 0 3px #e1574b;
+    }
+
+    .side-area {
+      display: grid;
+      grid-template-rows: 42px 1fr auto;
+      min-width: 0;
+      border-left: 2px solid var(--line);
+      background: #fff;
+    }
+
+    .side-title {
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: var(--green);
+      font-size: clamp(17px, 2vw, 26px);
+      font-weight: 900;
+      border-bottom: 2px solid var(--line);
+    }
+
+    .absent-zone {
+      min-height: 104px;
+      background: #fbfffd;
+    }
+
+    .note {
+      padding: 10px 12px 12px;
+      color: var(--danger);
+      font-size: clamp(11px, 1.3vw, 17px);
+      line-height: 1.35;
+      font-weight: 900;
+      text-align: left;
+      word-break: keep-all;
+    }
+
+    .note small {
+      display: block;
+      color: #ff5b4f;
+      font-size: .92em;
+    }
+
+    .magnet {
+      width: 50px;
+      height: 50px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border: 2px solid rgba(255, 255, 255, .92);
+      border-radius: 50%;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      touch-action: none;
+      box-shadow: 0 5px 10px rgba(18, 33, 30, .18);
+    }
+
+    .magnet:active {
+      transform: translateY(1px);
+    }
+
+    .magnet.is-selected {
+      outline: 4px solid #f3cb55;
+      outline-offset: 3px;
+      box-shadow:
+        0 0 0 6px rgba(255, 248, 216, .95),
+        0 10px 18px rgba(18, 33, 30, .28);
+    }
+
+    .magnet.level-beginner {
+      background: var(--level-beginner);
+    }
+
+    .magnet.level-d {
+      background: var(--level-d);
+    }
+
+    .magnet.level-c {
+      color: #101817;
+      background: var(--level-c);
+    }
+
+    .magnet.level-b {
+      background: var(--level-b);
+    }
+
+    .magnet.level-a {
+      background: var(--level-a);
+    }
+
+    .magnet.is-dragging {
+      opacity: .45;
+    }
+
+    .drag-ghost {
+      position: fixed;
+      z-index: 1000;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      opacity: .92;
+    }
+
+    @media (max-width: 780px) {
+      body {
+        padding: 12px;
+      }
+
+      .toolbar {
+        justify-content: center;
+      }
+
+      .board {
+        min-height: 0;
+        padding: 16px 12px 20px;
+        border-width: 8px;
+      }
+
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .court-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .court {
+        min-height: 210px;
+      }
+
+      .court:nth-child(2) {
+        border-right: 0;
+      }
+
+      .court:nth-child(1),
+      .court:nth-child(2) {
+        border-bottom: 2px solid var(--line);
+      }
+
+      .side-area {
+        border-top: 2px solid var(--line);
+        border-left: 0;
+      }
+
+      .member-zone {
+        min-height: 230px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .court-row {
+        grid-template-columns: 1fr;
+      }
+
+      .court {
+        border-right: 0;
+        border-bottom: 2px solid var(--line);
+      }
+
+      .court:last-child {
+        border-bottom: 0;
+      }
+    }
+
+    @media print {
+      body {
+        padding: 0;
+        background: #fff;
+      }
+
+      .toolbar {
+        display: none;
+      }
+
+      .app {
+        width: 100%;
+      }
+
+      .board {
+        min-height: 100vh;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="toolbar" aria-label="현황판 도구">
+      <button type="button" id="undoBtn" title="되돌리기" aria-label="되돌리기" disabled>↶</button>
+      <button type="button" id="redoBtn" title="다시실행" aria-label="다시실행" disabled>↷</button>
+      <button type="button" id="clearBtn" title="자석 위치 초기화" aria-label="자석 위치 초기화">×</button>
+      <button type="button" id="printBtn" title="인쇄" aria-label="인쇄">⎙</button>
+      <button type="button" id="fullBtn" title="전체 화면" aria-label="전체 화면">□</button>
+    </div>
+
+    <section class="board" aria-label="배드민턴클럽 코트 현황판">
+      <span class="corner left" aria-hidden="true"></span>
+      <span class="corner right" aria-hidden="true"></span>
+      <h1 class="title">배드민턴클럽</h1>
+
+      <div class="status-grid">
+        <div class="main-area">
+          <div class="section-title">게임 진행 명단</div>
+          <div class="court-row" id="courtRow"></div>
+
+          <div class="waiting" id="waitingLists"></div>
+
+          <section class="absent-panel">
+            <div class="list-title">미참석자 명단</div>
+            <div class="drop-zone absent-zone" id="absentZone" data-zone-id="absent" aria-label="미참석자 명단"></div>
+          </section>
+        </div>
+
+        <aside class="side-area">
+          <div class="side-title">참석자 명단</div>
+          <div class="drop-zone member-zone" id="memberZone" data-zone-id="members" aria-label="참석자 명단"></div>
+          <p class="note">
+            ※ 자석을 클릭한 뒤 원하는 칸을 클릭하세요.
+            <small>대기 번호를 클릭한 뒤 코트를 클릭하면 대기조가 이동합니다.</small>
+          </p>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const storageKey = "badminton-court-board-magnets-v4";
+    const playerDataUpdatedAt = "2026-06-24";
+    const playerData = [
+      { id: "u2792", name: "권대근", sex: "M", provinceLevel: "D", cityLevel: "D" },
+      { id: "u87881", name: "기운희", sex: "W", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u147897", name: "김대환", sex: "M", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u72003", name: "김도균", sex: "M", provinceLevel: "D", cityLevel: "D" },
+      { id: "u87882", name: "김아영", sex: "W", provinceLevel: "D", cityLevel: "D" },
+      { id: "u147898", name: "김윤동", sex: "M", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u108007", name: "김이슬", sex: "W", provinceLevel: "D", cityLevel: "D" },
+      { id: "u132615", name: "김지은", sex: "W", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u122523", name: "김태영", sex: "M", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u107206", name: "김형걸", sex: "M", provinceLevel: "C", cityLevel: "C" },
+      { id: "u87883", name: "김형준", sex: "M", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u142897", name: "노기병", sex: "M", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u124314", name: "도우성", sex: "M", provinceLevel: "D", cityLevel: "D" },
+      { id: "u72005", name: "민귀선", sex: "W", provinceLevel: "D", cityLevel: "D" },
+      { id: "u1973", name: "박광제", sex: "M", provinceLevel: "D", cityLevel: "D" },
+      { id: "u149195", name: "박승원", sex: "M", provinceLevel: "D", cityLevel: "D" },
+      { id: "u132616", name: "박태휘", sex: "M", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u147899", name: "서동욱", sex: "M", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u117586", name: "성우석", sex: "M", provinceLevel: "D", cityLevel: "D" },
+      { id: "u122524", name: "신현태", sex: "M", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u132618", name: "심유향", sex: "W", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u123536", name: "안병두", sex: "M", provinceLevel: "C", cityLevel: "C" },
+      { id: "u87884", name: "여명호", sex: "M", provinceLevel: "D", cityLevel: "D" },
+      { id: "u123529", name: "윤정표", sex: "M", provinceLevel: "D", cityLevel: "D" },
+      { id: "u72006", name: "윤현성", sex: "M", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u72007", name: "이광복", sex: "M", provinceLevel: "D", cityLevel: "D" },
+      { id: "u126716", name: "이광수", sex: "M", provinceLevel: "B", cityLevel: "B" },
+      { id: "u149196", name: "이미지", sex: "W", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u2798", name: "이보영", sex: "M", provinceLevel: "A", cityLevel: "A" },
+      { id: "u124316", name: "이상우", sex: "M", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u132617", name: "이소라", sex: "W", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u2800", name: "이정훈", sex: "M", provinceLevel: "D", cityLevel: "D" },
+      { id: "u28084", name: "이제익", sex: "M", provinceLevel: "D", cityLevel: "D" },
+      { id: "u72008", name: "임광혁", sex: "M", provinceLevel: "B", cityLevel: "B" },
+      { id: "u124317", name: "임다정", sex: "W", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u139044", name: "임지은", sex: "W", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u38743", name: "장준혁", sex: "M", provinceLevel: "B", cityLevel: "B" },
+      { id: "u87887", name: "전민주", sex: "W", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u142644", name: "정겨운", sex: "M", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u87890", name: "정성현", sex: "W", provinceLevel: "D", cityLevel: "D" },
+      { id: "u87891", name: "정연기", sex: "M", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u147900", name: "조강인", sex: "M", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u124318", name: "조아라", sex: "W", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u123538", name: "조현주", sex: "W", provinceLevel: "D", cityLevel: "D" },
+      { id: "u132619", name: "최민환", sex: "M", provinceLevel: "초심", cityLevel: "초심" },
+      { id: "u87895", name: "최홍철", sex: "M", provinceLevel: "D", cityLevel: "D" },
+      { id: "u87896", name: "한상훈", sex: "M", provinceLevel: "D", cityLevel: "D" },
+      { id: "u80835", name: "한유정", sex: "W", provinceLevel: "A", cityLevel: "A" }
+    ];
+    function gradeClass(level) {
+      const normalized = String(level || "").toUpperCase();
+      if (normalized === "A") return "level-a";
+      if (normalized === "B") return "level-b";
+      if (normalized === "C") return "level-c";
+      if (normalized === "D") return "level-d";
+      return "level-beginner";
+    }
+
+    const magnets = playerData.map((player) => ({
+      id: player.id,
+      name: player.name,
+      group: gradeClass(player.cityLevel || player.provinceLevel),
+      provinceLevel: player.provinceLevel,
+      cityLevel: player.cityLevel
+    }));
+
+    const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+    const positions = saved.positions || {};
+    const courtRow = document.querySelector("#courtRow");
+    const waitingLists = document.querySelector("#waitingLists");
+
+    let pointerDrag = null;
+    let selectedMagnetId = null;
+    let selectedWaitZoneId = null;
+    const undoStack = [];
+    const redoStack = [];
+    const undoBtn = document.querySelector("#undoBtn");
+    const redoBtn = document.querySelector("#redoBtn");
+
+    function savePositions() {
+      localStorage.setItem(storageKey, JSON.stringify({ positions }));
+    }
+
+    function snapshotPositions() {
+      return JSON.stringify(positions);
+    }
+
+    function restorePositions(snapshot) {
+      Object.keys(positions).forEach((key) => delete positions[key]);
+      Object.assign(positions, JSON.parse(snapshot));
+      selectedMagnetId = null;
+      selectedWaitZoneId = null;
+      renderMagnets();
+      selectWaitZone(null);
+      savePositions();
+      updateHistoryButtons();
+    }
+
+    function pushUndoSnapshot() {
+      undoStack.push(snapshotPositions());
+      redoStack.length = 0;
+      updateHistoryButtons();
+    }
+
+    function updateHistoryButtons() {
+      undoBtn.disabled = undoStack.length === 0;
+      redoBtn.disabled = redoStack.length === 0;
+    }
+
+    function createZone(id, label, className) {
+      const zone = document.createElement("div");
+      zone.className = className;
+      zone.dataset.zoneId = id;
+      zone.setAttribute("aria-label", label);
+      return zone;
+    }
+
+    function createMagnet(player) {
+      const magnet = document.createElement("div");
+      magnet.className = `magnet ${player.group}`;
+      magnet.draggable = false;
+      magnet.dataset.magnetId = player.id;
+      magnet.textContent = player.name;
+      magnet.setAttribute("role", "button");
+      magnet.setAttribute("tabindex", "0");
+      const level = player.cityLevel || player.provinceLevel || "초심";
+      magnet.title = `${player.name} / ${level}`;
+      magnet.setAttribute("aria-label", `${player.name} ${level} 자석`);
+      if (selectedMagnetId === player.id) {
+        magnet.classList.add("is-selected");
+      }
+      magnet.addEventListener("click", (event) => {
+        event.stopPropagation();
+        selectMagnet(selectedMagnetId === player.id ? null : player.id);
+      });
+      return magnet;
+    }
+
+    function selectMagnet(id) {
+      selectedMagnetId = id;
+      if (id) selectWaitZone(null);
+      document.querySelectorAll(".magnet").forEach((magnet) => {
+        magnet.classList.toggle("is-selected", magnet.dataset.magnetId === selectedMagnetId);
+      });
+    }
+
+    function selectWaitZone(id) {
+      selectedWaitZoneId = id;
+      if (id) {
+        selectedMagnetId = null;
+        document.querySelectorAll(".magnet.is-selected").forEach((magnet) => magnet.classList.remove("is-selected"));
+      }
+      document.querySelectorAll(".wait-list").forEach((list) => {
+        const zone = list.querySelector("[data-zone-id]");
+        list.classList.toggle("is-selected", zone?.dataset.zoneId === selectedWaitZoneId);
+      });
+    }
+
+    function defaultZoneFor() {
+      return "absent";
+    }
+
+    function zoneForMagnet(id) {
+      return positions[id] || defaultZoneFor();
+    }
+
+    function getZone(zoneId) {
+      return document.querySelector(`[data-zone-id="${zoneId}"]`);
+    }
+
+    function moveMagnet(magnetId, targetZoneId) {
+      const player = magnets.find((item) => item.id === magnetId);
+      const target = getZone(targetZoneId);
+      if (!player || !target) return false;
+
+      const currentZoneId = zoneForMagnet(magnetId);
+      const isLimitedZone = targetZoneId.startsWith("wait-") || targetZoneId.startsWith("court-");
+      const isNewLimitedZone = isLimitedZone && currentZoneId !== targetZoneId;
+      if (isNewLimitedZone && target.querySelectorAll(".magnet").length >= 4) {
+        target.classList.add("is-full");
+        setTimeout(() => target.classList.remove("is-full"), 650);
+        return false;
+      }
+
+      pushUndoSnapshot();
+      positions[magnetId] = targetZoneId;
+      renderMagnets();
+      savePositions();
+      return true;
+    }
+
+    function magnetIdsInZone(zoneId) {
+      return magnets
+        .filter((player) => zoneForMagnet(player.id) === zoneId)
+        .map((player) => player.id);
+    }
+
+    function moveWaitGroupToCourt(waitZoneId, courtZoneId) {
+      const waitIds = magnetIdsInZone(waitZoneId);
+      const courtIds = magnetIdsInZone(courtZoneId);
+      const court = getZone(courtZoneId);
+      if (!court || waitIds.length === 0) return false;
+      if (courtIds.length + waitIds.length > 4) {
+        court.classList.add("is-full");
+        setTimeout(() => court.classList.remove("is-full"), 650);
+        return false;
+      }
+
+      pushUndoSnapshot();
+      waitIds.forEach((id) => {
+        positions[id] = courtZoneId;
+      });
+
+      const start = Number(waitZoneId.replace("wait-", ""));
+      for (let from = start + 1; from <= 6; from += 1) {
+        magnetIdsInZone(`wait-${from}`).forEach((id) => {
+          positions[id] = `wait-${from - 1}`;
+        });
+      }
+
+      renderMagnets();
+      savePositions();
+      return true;
+    }
+
+    function renderMagnets() {
+      document.querySelectorAll(".magnet").forEach((magnet) => magnet.remove());
+
+      magnets.forEach((player) => {
+        const target = getZone(zoneForMagnet(player.id)) || getZone(defaultZoneFor());
+        const magnetArea = target.querySelector(".wait-magnets") || target;
+        magnetArea.appendChild(createMagnet(player));
+      });
+    }
+
+    function clearHover() {
+      document.querySelectorAll(".is-hovered").forEach((zone) => zone.classList.remove("is-hovered"));
+    }
+
+    function wireDropTarget(zone) {
+      zone.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        clearHover();
+        zone.classList.add("is-hovered");
+      });
+
+      zone.addEventListener("dragleave", () => {
+        zone.classList.remove("is-hovered");
+      });
+
+      zone.addEventListener("drop", (event) => {
+        event.preventDefault();
+        const id = event.dataTransfer.getData("text/plain");
+        if (id) moveMagnet(id, zone.dataset.zoneId);
+        clearHover();
+      });
+
+      zone.addEventListener("click", () => {
+        if (selectedWaitZoneId && zone.dataset.zoneId.startsWith("court-")) {
+          if (moveWaitGroupToCourt(selectedWaitZoneId, zone.dataset.zoneId)) {
+            selectWaitZone(null);
+          }
+          return;
+        }
+
+        if (!selectedMagnetId) return;
+        if (moveMagnet(selectedMagnetId, zone.dataset.zoneId)) {
+          selectMagnet(null);
+        }
+      });
+    }
+
+    function startPointerDrag(event) {
+      if (event.button !== 0 && event.pointerType === "mouse") return;
+      event.preventDefault();
+
+      const magnet = event.currentTarget;
+      const rect = magnet.getBoundingClientRect();
+
+      pointerDrag = {
+        id: magnet.dataset.magnetId,
+        source: magnet,
+        ghost: magnet.cloneNode(true)
+      };
+
+      pointerDrag.ghost.classList.add("drag-ghost");
+      pointerDrag.ghost.style.width = `${rect.width}px`;
+      pointerDrag.ghost.style.height = `${rect.height}px`;
+      document.body.appendChild(pointerDrag.ghost);
+      magnet.classList.add("is-dragging");
+      magnet.setPointerCapture?.(event.pointerId);
+      moveGhost(event.clientX, event.clientY);
+
+      document.addEventListener("pointermove", movePointerDrag);
+      document.addEventListener("pointerup", endPointerDrag, { once: true });
+      document.addEventListener("pointercancel", cancelPointerDrag, { once: true });
+    }
+
+    function moveGhost(x, y) {
+      if (!pointerDrag) return;
+      pointerDrag.ghost.style.left = `${x}px`;
+      pointerDrag.ghost.style.top = `${y}px`;
+    }
+
+    function zoneFromPoint(x, y) {
+      pointerDrag.ghost.style.display = "none";
+      const zone = document.elementFromPoint(x, y)?.closest("[data-zone-id]");
+      pointerDrag.ghost.style.display = "";
+      return zone;
+    }
+
+    function movePointerDrag(event) {
+      if (!pointerDrag) return;
+      moveGhost(event.clientX, event.clientY);
+      clearHover();
+      zoneFromPoint(event.clientX, event.clientY)?.classList.add("is-hovered");
+    }
+
+    function endPointerDrag(event) {
+      if (!pointerDrag) return;
+      const zone = zoneFromPoint(event.clientX, event.clientY);
+      const id = pointerDrag.id;
+      cleanupPointerDrag();
+      if (zone) moveMagnet(id, zone.dataset.zoneId);
+    }
+
+    function cancelPointerDrag() {
+      cleanupPointerDrag();
+    }
+
+    function cleanupPointerDrag() {
+      if (!pointerDrag) return;
+      pointerDrag.source.classList.remove("is-dragging");
+      document.removeEventListener("pointermove", movePointerDrag);
+      document.removeEventListener("pointerup", endPointerDrag);
+      document.removeEventListener("pointercancel", cancelPointerDrag);
+      pointerDrag.ghost.remove();
+      pointerDrag = null;
+      clearHover();
+    }
+
+    function buildBoard() {
+      for (let court = 1; court <= 4; court += 1) {
+        const section = document.createElement("section");
+        section.className = "court";
+        section.innerHTML = `<div class="court-title">${court}코트</div>`;
+        section.appendChild(createZone(`court-${court}`, `${court}코트 게임 진행 명단`, "drop-zone court-zone"));
+        courtRow.appendChild(section);
+      }
+
+      const waitTitle = document.createElement("div");
+      waitTitle.className = "waiting-title";
+      waitTitle.textContent = "게임 대기 명단";
+      waitingLists.appendChild(waitTitle);
+
+      [1, 2, 3, 4, 5, 6].forEach((number) => {
+        const list = document.createElement("section");
+        list.className = "wait-list";
+        list.innerHTML = `<div class="wait-number-label">${number}</div>`;
+        const zone = createZone(`wait-${number}`, `게임 대기 명단 ${number}번`, "drop-zone wait-zone");
+        list.querySelector(".wait-number-label").addEventListener("click", (event) => {
+          event.stopPropagation();
+          const zoneId = `wait-${number}`;
+          selectWaitZone(selectedWaitZoneId === zoneId ? null : zoneId);
+        });
+        list.appendChild(zone);
+        waitingLists.appendChild(list);
+      });
+
+      document.querySelectorAll("[data-zone-id]").forEach(wireDropTarget);
+    }
+
+    buildBoard();
+    renderMagnets();
+
+    document.querySelector("#printBtn").addEventListener("click", () => window.print());
+
+    document.querySelector("#fullBtn").addEventListener("click", () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen?.();
+      } else {
+        document.exitFullscreen?.();
+      }
+    });
+
+    undoBtn.addEventListener("click", () => {
+      if (undoStack.length === 0) return;
+      redoStack.push(snapshotPositions());
+      restorePositions(undoStack.pop());
+    });
+
+    redoBtn.addEventListener("click", () => {
+      if (redoStack.length === 0) return;
+      undoStack.push(snapshotPositions());
+      restorePositions(redoStack.pop());
+    });
+
+    document.querySelector("#clearBtn").addEventListener("click", () => {
+      if (!confirm("자석 위치를 모두 미참석자로 초기화할까요?")) return;
+      pushUndoSnapshot();
+      localStorage.removeItem(storageKey);
+      Object.keys(positions).forEach((key) => delete positions[key]);
+      selectedMagnetId = null;
+      selectedWaitZoneId = null;
+      renderMagnets();
+      selectWaitZone(null);
+      savePositions();
+    });
+
+    updateHistoryButtons();
+  </script>
+</body>
+</html>
